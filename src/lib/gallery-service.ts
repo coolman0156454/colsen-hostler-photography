@@ -24,6 +24,10 @@ type CreateGalleryInput = {
   isFeatured?: boolean;
 };
 
+type UpdateGalleryInput = CreateGalleryInput & {
+  id: string;
+};
+
 let hasSyncedConfiguredGalleries = false;
 
 const sortGalleries = (galleries: GalleryRecord[]) =>
@@ -172,3 +176,77 @@ export const createGallery = async (input: CreateGalleryInput) => {
   return created;
 };
 
+export const updateGallery = async (input: UpdateGalleryInput) => {
+  const galleryId = input.id.trim();
+  if (!galleryId) {
+    throw new Error("Gallery id is required.");
+  }
+
+  const visibility = input.visibility;
+  const requiresPassword = visibility === GalleryVisibility.PASSWORD;
+  const password = input.password?.trim();
+  const normalizedSlug = slugify(input.slug?.trim() || input.name);
+
+  if (!normalizedSlug) {
+    throw new Error("Gallery slug could not be generated.");
+  }
+
+  const trimmedFolderId = input.folderId.trim();
+  if (!trimmedFolderId) {
+    throw new Error("Drive folder id is required.");
+  }
+
+  const galleries = await readGalleries();
+  const index = galleries.findIndex((gallery) => gallery.id === galleryId);
+
+  if (index === -1) {
+    throw new Error("Gallery not found.");
+  }
+
+  if (
+    galleries.some(
+      (gallery) => gallery.id !== galleryId && gallery.slug === normalizedSlug,
+    )
+  ) {
+    throw new Error("Gallery slug already exists.");
+  }
+
+  if (
+    galleries.some(
+      (gallery) => gallery.id !== galleryId && gallery.folderId === trimmedFolderId,
+    )
+  ) {
+    throw new Error("This Google Drive folder is already linked to another gallery.");
+  }
+
+  const current = galleries[index];
+
+  if (requiresPassword && !password && !current.passwordHash) {
+    throw new Error("Password is required for password-protected galleries.");
+  }
+
+  const now = new Date().toISOString();
+  const updated: GalleryRecord = {
+    ...current,
+    slug: normalizedSlug,
+    name: input.name.trim(),
+    category: input.category.trim(),
+    description: input.description?.trim() || null,
+    folderId: trimmedFolderId,
+    coverImageId: input.coverImageId?.trim() || null,
+    visibility,
+    passwordHash: requiresPassword
+      ? password
+        ? await hashGalleryPassword(password)
+        : current.passwordHash
+      : null,
+    isFeatured: Boolean(input.isFeatured),
+    managedByConfig: false,
+    updatedAt: now,
+  };
+
+  galleries[index] = updated;
+  await writeGalleries(galleries);
+
+  return updated;
+};

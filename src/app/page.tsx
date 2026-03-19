@@ -4,6 +4,8 @@ import { AnimatedSection } from "@/components/animated-section";
 import { FeaturedGrid } from "@/components/featured-grid";
 import { getAllGalleries, getFeaturedImages } from "@/lib/gallery-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const [featuredImages, galleries] = await Promise.all([
     getFeaturedImages(),
@@ -46,10 +48,10 @@ export default async function Home() {
             Focus Areas
           </p>
           <ul className="mt-3 space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
-            <li>• Athletic portraits</li>
-            <li>• High-speed action coverage</li>
-            <li>• Team media day sessions</li>
-            <li>• Senior and lifestyle portraits</li>
+            <li>&bull; Athletic portraits</li>
+            <li>&bull; High-speed action coverage</li>
+            <li>&bull; Team media day sessions</li>
+            <li>&bull; Senior and lifestyle portraits</li>
           </ul>
           <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
             Based in the U.S. and available for local and travel shoots.

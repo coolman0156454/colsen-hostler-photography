@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AdminGalleryForm } from "@/components/admin-gallery-form";
+import { AdminGalleryForm, type EditableGallery } from "@/components/admin-gallery-form";
 import { getAuthSession } from "@/lib/auth";
 import { getAllGalleries } from "@/lib/gallery-service";
 import { type GalleryVisibility as GalleryVisibilityType } from "@/types/gallery";
@@ -11,7 +12,11 @@ const visibilityLabel: Record<GalleryVisibilityType, string> = {
   GOOGLE_AUTH: "Google Login",
 };
 
-export default async function AdminPage() {
+type AdminPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   const session = await getAuthSession();
 
   if (!session?.user) {
@@ -30,6 +35,24 @@ export default async function AdminPage() {
   }
 
   const galleries = await getAllGalleries();
+  const query = await searchParams;
+  const rawEditId = Array.isArray(query.edit) ? query.edit[0] : query.edit;
+  const editGallery = galleries.find((gallery) => gallery.id === rawEditId) ?? null;
+  const editableGallery: EditableGallery | null = editGallery
+    ? {
+        id: editGallery.id,
+        name: editGallery.name,
+        slug: editGallery.slug,
+        category: editGallery.category,
+        description: editGallery.description,
+        folderId: editGallery.folderId,
+        coverImageId: editGallery.coverImageId,
+        visibility: editGallery.visibility,
+        isFeatured: editGallery.isFeatured,
+        managedByConfig: editGallery.managedByConfig,
+        hasPassword: Boolean(editGallery.passwordHash),
+      }
+    : null;
 
   return (
     <section className="space-y-8">
@@ -42,7 +65,10 @@ export default async function AdminPage() {
         </h1>
       </div>
 
-      <AdminGalleryForm />
+      <AdminGalleryForm
+        key={editableGallery?.id ?? "create-gallery"}
+        gallery={editableGallery}
+      />
 
       <div className="overflow-hidden rounded-3xl border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="w-full text-left text-sm">
@@ -52,6 +78,7 @@ export default async function AdminPage() {
               <th className="px-4 py-3">Folder</th>
               <th className="px-4 py-3">Visibility</th>
               <th className="px-4 py-3">Featured</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -62,13 +89,28 @@ export default async function AdminPage() {
               >
                 <td className="px-4 py-3">
                   <p className="font-medium">{gallery.name}</p>
-                  <p className="text-xs text-zinc-500">{gallery.slug}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                    <span>{gallery.slug}</span>
+                    {gallery.managedByConfig ? (
+                      <span className="rounded-full border border-amber-500/40 px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-amber-500">
+                        Config
+                      </span>
+                    ) : null}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-zinc-500">
                   {gallery.folderId}
                 </td>
                 <td className="px-4 py-3">{visibilityLabel[gallery.visibility]}</td>
                 <td className="px-4 py-3">{gallery.isFeatured ? "Yes" : "No"}</td>
+                <td className="px-4 py-3 text-right">
+                  <Link
+                    href={`/admin?edit=${gallery.id}`}
+                    className="inline-flex rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
