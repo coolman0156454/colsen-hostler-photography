@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Session } from "next-auth";
 
 import { AuthButton } from "@/components/auth-button";
@@ -11,11 +14,36 @@ const links = [
   { href: "/contact", label: "Contact" },
 ];
 
-type NavbarProps = {
-  session: Session | null;
-};
+export function Navbar() {
+  const [session, setSession] = useState<Session | null>(null);
 
-export function Navbar({ session }: NavbarProps) {
+  useEffect(() => {
+    let active = true;
+
+    const loadSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as Session | null;
+        if (active) {
+          setSession(data);
+        }
+      } catch {
+        if (active) {
+          setSession(null);
+        }
+      }
+    };
+
+    void loadSession();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const isAdmin = Boolean(session?.user?.isAdmin);
 
   return (
@@ -74,3 +102,4 @@ export function Navbar({ session }: NavbarProps) {
     </header>
   );
 }
+

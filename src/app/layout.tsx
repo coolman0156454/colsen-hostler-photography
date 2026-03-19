@@ -3,7 +3,6 @@ import { Bebas_Neue, Manrope } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { SiteShell } from "@/components/site-shell";
-import { getAuthSession } from "@/lib/auth";
 
 import "./globals.css";
 
@@ -29,8 +28,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getAuthSession();
-
   return (
     <html
       lang="en"
@@ -39,7 +36,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full">
         <Providers>
-          <SiteShell session={session}>{children}</SiteShell>
+          <SiteShell>{children}</SiteShell>
         </Providers>
       </body>
     </html>
