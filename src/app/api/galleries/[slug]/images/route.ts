@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 
 import { canViewGallery } from "@/lib/access";
 import { getAuthSession } from "@/lib/auth";
-import { listDriveFolderImages } from "@/lib/drive";
+import { listDriveFolderContents } from "@/lib/drive";
 import { getGalleryBySlug } from "@/lib/gallery-service";
+import { type GalleryBreadcrumb } from "@/types/gallery";
 
 type Context = {
   params: Promise<{ slug: string }>;
@@ -29,10 +30,43 @@ export async function GET(request: Request, context: Context) {
   }
 
   try {
-    const images = await listDriveFolderImages(gallery.folderId);
+    const url = new URL(request.url);
+    const rawPath = url.searchParams.get("path") ?? "";
+    const pathIds = rawPath
+      .split(",")
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    const breadcrumbs: GalleryBreadcrumb[] = [
+      { id: gallery.folderId, name: gallery.name },
+    ];
+
+    let currentFolderId = gallery.folderId;
+    let currentContents = await listDriveFolderContents(currentFolderId);
+
+    for (const folderId of pathIds) {
+      const matchingFolder = currentContents.folders.find(
+        (folder) => folder.id === folderId,
+      );
+
+      if (!matchingFolder) {
+        return NextResponse.json(
+          { error: "Invalid gallery folder path." },
+          { status: 400 },
+        );
+      }
+
+      breadcrumbs.push({ id: matchingFolder.id, name: matchingFolder.name });
+      currentFolderId = matchingFolder.id;
+      currentContents = await listDriveFolderContents(currentFolderId);
+    }
 
     return NextResponse.json(
-      { images },
+      {
+        currentFolderId,
+        breadcrumbs,
+        folders: currentContents.folders,
+        images: currentContents.images,
+      },
       {
         headers: {
           "Cache-Control": "s-maxage=300, stale-while-revalidate=600",
@@ -47,4 +81,3 @@ export async function GET(request: Request, context: Context) {
     );
   }
 }
-

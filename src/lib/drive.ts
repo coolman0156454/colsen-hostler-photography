@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 
 import { env } from "@/lib/env";
-import { type GalleryImage } from "@/types/gallery";
+import { type DriveFolder, type GalleryImage } from "@/types/gallery";
 
 const DRIVE_SCOPE = ["https://www.googleapis.com/auth/drive.readonly"];
 const CACHE_TTL_MS = 1000 * 60 * 5;
@@ -14,6 +14,14 @@ type CacheEntry = {
 };
 
 const driveCache = new Map<string, CacheEntry>();
+const folderContentsCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    folders: DriveFolder[];
+    images: GalleryImage[];
+  }
+>();
 
 let driveClient: ReturnType<typeof google.drive> | null = null;
 
@@ -79,6 +87,11 @@ const toImage = (file: {
   downloadUrl: `https://drive.google.com/uc?export=download&id=${file.id}`,
 });
 
+const toFolder = (file: { id: string; name: string }) => ({
+  id: file.id,
+  name: file.name,
+});
+
 const isFolder = (mimeType: string | null | undefined) =>
   mimeType === DRIVE_FOLDER_MIME_TYPE;
 
@@ -88,10 +101,92 @@ const imageOrFolderQuery = (parentId: string) =>
 export const clearDriveCache = (folderId?: string) => {
   if (!folderId) {
     driveCache.clear();
+    folderContentsCache.clear();
     return;
   }
 
   driveCache.delete(folderId);
+  folderContentsCache.delete(folderId);
+};
+
+export const listDriveFolderContents = async (
+  folderId: string,
+  options?: { forceRefresh?: boolean },
+) => {
+  const trimmedFolderId = folderId.trim();
+  if (!trimmedFolderId) {
+    return {
+      folders: [] as DriveFolder[],
+      images: [] as GalleryImage[],
+    };
+  }
+
+  const now = Date.now();
+  const cached = folderContentsCache.get(trimmedFolderId);
+
+  if (!options?.forceRefresh && cached && cached.expiresAt > now) {
+    return {
+      folders: cached.folders,
+      images: cached.images,
+    };
+  }
+
+  const drive = getDriveClient();
+  const folders: DriveFolder[] = [];
+  const images: GalleryImage[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const response = await drive.files.list({
+      q: imageOrFolderQuery(trimmedFolderId),
+      fields:
+        "nextPageToken, files(id, name, mimeType, createdTime, imageMediaMetadata(width,height))",
+      pageSize: 1000,
+      pageToken,
+      orderBy: "folder,name,createdTime desc",
+      includeItemsFromAllDrives: true,
+      supportsAllDrives: true,
+    });
+
+    const pageFiles = response.data.files ?? [];
+    for (const file of pageFiles) {
+      if (!file.id || !file.name) {
+        continue;
+      }
+
+      if (isFolder(file.mimeType)) {
+        folders.push(toFolder({ id: file.id, name: file.name }));
+        continue;
+      }
+
+      images.push(
+        toImage({
+          id: file.id,
+          name: file.name,
+          createdTime: file.createdTime,
+          imageMediaMetadata: file.imageMediaMetadata,
+        }),
+      );
+    }
+
+    pageToken = response.data.nextPageToken ?? undefined;
+  } while (pageToken);
+
+  folders.sort((a, b) => a.name.localeCompare(b.name));
+  images.sort((a, b) => {
+    const aTime = a.createdTime ?? "";
+    const bTime = b.createdTime ?? "";
+    return bTime.localeCompare(aTime);
+  });
+
+  folderContentsCache.set(trimmedFolderId, {
+    expiresAt: now + CACHE_TTL_MS,
+    folders,
+    images,
+  });
+  trimCache();
+
+  return { folders, images };
 };
 
 export const listDriveFolderImages = async (

@@ -39,3 +39,20 @@ export interface GalleryImage {
   fullUrl: string;
   downloadUrl: string;
 }
+
+export interface DriveFolder {
+  id: string;
+  name: string;
+}
+
+export interface GalleryBreadcrumb {
+  id: string;
+  name: string;
+}
+
+export interface GalleryFolderContents {
+  currentFolderId: string;
+  breadcrumbs: GalleryBreadcrumb[];
+  folders: DriveFolder[];
+  images: GalleryImage[];
+}
