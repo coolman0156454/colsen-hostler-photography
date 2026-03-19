@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { GoogleSignInButton } from "@/components/google-signin-button";
 import { env } from "@/lib/env";
 
 type SignInPageProps = {
@@ -48,9 +47,6 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const callbackUrl = sanitizeCallbackUrl(params.callbackUrl);
   const errorCode = Array.isArray(params.error) ? params.error[0] : params.error;
-  const signInHref = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(
-    callbackUrl,
-  )}`;
   const errorMessage = errorCode
     ? authErrorMessages[errorCode] ?? authErrorMessages.default
     : null;
@@ -75,12 +71,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           ) : null}
         </div>
       ) : null}
-      <Link
-        href={signInHref}
-        className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-      >
-        Continue with Google
-      </Link>
+      <GoogleSignInButton callbackUrl={callbackUrl} />
     </section>
   );
 }
