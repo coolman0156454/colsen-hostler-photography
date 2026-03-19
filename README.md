@@ -100,6 +100,7 @@ Request/security logging:
 - `NEXTAUTH_DEBUG=true` to keep verbose NextAuth debug output
 - `REQUEST_COUNTRY_ALLOWLIST=US` to flag traffic from unexpected countries
 - `REQUEST_ALERT_THRESHOLD=100` to flag high request volume from one IP in a 10-minute window
+- `DATA_DIR=/data` to store galleries on a persistent volume in production
 
 Contact form:
 
@@ -175,7 +176,7 @@ Option B: Admin route:
 
 1. Deploy from GitHub repo
 2. Set all env vars
-3. Keep the `data/` directory writable for JSON storage persistence.
+3. Add a Railway volume, mount it at `/data`, and set `DATA_DIR=/data`
 4. Railway start command runs `npm run start`
 
 ## GitHub Push Commands

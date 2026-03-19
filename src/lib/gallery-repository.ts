@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { GalleryRecord } from "@/types/gallery";
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir = process.env.DATA_DIR?.trim() || path.join(process.cwd(), "data");
 const dataFile = path.join(dataDir, "galleries.json");
 
 let writeQueue = Promise.resolve();
@@ -41,4 +41,3 @@ export const writeGalleries = async (galleries: GalleryRecord[]) => {
 
   await writeQueue;
 };
-

@@ -81,6 +81,16 @@ export function GalleryDetailClient({
         };
 
         if (!response.ok) {
+          if (response.status === 403 && needsPassword && resolvedToken) {
+            window.localStorage.removeItem(tokenStorageKey(slug));
+            setAccessToken(null);
+            setFolders([]);
+            setImages([]);
+            setBreadcrumbs([{ id: slug, name }]);
+            setError("Saved gallery access expired. Enter the password again.");
+            return;
+          }
+
           if (response.status === 400 && requestedPath.length > 0) {
             startTransition(() => setFolderPath([]));
             syncUrl([]);
@@ -110,7 +120,7 @@ export function GalleryDetailClient({
         setIsLoading(false);
       }
     },
-    [accessToken, folderPath, name, slug, syncUrl],
+    [accessToken, folderPath, name, needsPassword, slug, syncUrl],
   );
 
   useEffect(() => {
@@ -187,7 +197,10 @@ export function GalleryDetailClient({
       </div>
 
       {needsPassword && !accessToken ? (
-        <UnlockGalleryForm slug={slug} onUnlocked={handleUnlocked} />
+        <div className="space-y-3">
+          {error ? <p className="text-sm text-red-500">{error}</p> : null}
+          <UnlockGalleryForm slug={slug} onUnlocked={handleUnlocked} />
+        </div>
       ) : null}
 
       {!needsPassword || accessToken ? (
