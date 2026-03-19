@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f2f6f8;
+  --surface: #ffffff;
+  --foreground: #101113;
+  --muted: #707681;
+  --ring: #0ea5e9;
+  --accent: #f97316;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+}
+
+.dark {
+  --background: #06080b;
+  --surface: #12161d;
+  --foreground: #edf3f8;
+  --muted: #a0adbc;
+  --ring: #22d3ee;
+  --accent: #f59e0b;
+}
+
+* {
+  border-color: color-mix(in oklab, var(--foreground) 15%, transparent);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+}
+
+.font-heading {
+  font-family: var(--font-heading), sans-serif;
+}
+
+a,
+button {
+  outline-color: var(--ring);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--ring) 30%, transparent);
+}
