@@ -38,8 +38,8 @@ export default async function RootLayout({
       className={`${headingFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <Providers session={session}>
-          <SiteShell>{children}</SiteShell>
+        <Providers>
+          <SiteShell session={session}>{children}</SiteShell>
         </Providers>
       </body>
     </html>

@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 
 import { AuthButton } from "@/components/auth-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -13,8 +11,11 @@ const links = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function Navbar() {
-  const { data: session } = useSession();
+type NavbarProps = {
+  session: Session | null;
+};
+
+export function Navbar({ session }: NavbarProps) {
   const isAdmin = Boolean(session?.user?.isAdmin);
 
   return (
@@ -48,7 +49,7 @@ export function Navbar() {
             ) : null}
           </div>
           <ThemeToggle />
-          <AuthButton />
+          <AuthButton user={session?.user} />
         </div>
       </nav>
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 pb-3 md:hidden">
@@ -73,4 +74,3 @@ export function Navbar() {
     </header>
   );
 }
-

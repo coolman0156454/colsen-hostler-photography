@@ -2,19 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import type { Session } from "next-auth";
 
 import { cn } from "@/lib/utils";
 
-export function AuthButton() {
-  const { data: session, status } = useSession();
-  const user = session?.user;
+type AuthButtonProps = {
+  user: Session["user"] | null | undefined;
+};
 
-  if (status === "loading") {
-    return (
-      <div className="h-10 w-24 animate-pulse rounded-full bg-zinc-700/30 dark:bg-zinc-700/40" />
-    );
-  }
+export function AuthButton({ user }: AuthButtonProps) {
 
   if (!user) {
     return (
@@ -59,4 +56,3 @@ export function AuthButton() {
     </div>
   );
 }
-

@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
+import type { Session } from "next-auth";
 
 import { Navbar } from "@/components/navbar";
 
 type SiteShellProps = {
   children: ReactNode;
+  session: Session | null;
 };
 
-export function SiteShell({ children }: SiteShellProps) {
+export function SiteShell({ children, session }: SiteShellProps) {
   return (
     <>
-      <Navbar />
+      <Navbar session={session} />
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl dark:bg-cyan-400/10" />
         <div className="absolute bottom-0 right-0 h-96 w-96 translate-x-1/3 rounded-full bg-amber-500/20 blur-3xl dark:bg-amber-400/10" />
@@ -18,7 +20,7 @@ export function SiteShell({ children }: SiteShellProps) {
         {children}
       </main>
       <footer className="border-t border-zinc-300/70 px-4 py-6 text-center text-sm text-zinc-600 dark:border-zinc-800/70 dark:text-zinc-400">
-        © {new Date().getFullYear()} Colsen Hostler Photography
+        Copyright {new Date().getFullYear()} Colsen Hostler Photography
       </footer>
     </>
   );
