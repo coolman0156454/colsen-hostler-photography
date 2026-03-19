@@ -2,6 +2,7 @@ import { type NextAuthOptions, getServerSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 import { env, isGoogleAuthConfigured } from "@/lib/env";
+import { logGoogleSignIn } from "@/lib/request-logger";
 
 const isAdminEmail = (email: string | null | undefined) =>
   Boolean(email && env.adminEmails.includes(email.toLowerCase()));
@@ -45,6 +46,19 @@ export const authOptions: NextAuthOptions = {
     maxAge: 60 * 60 * 24 * 7,
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        logGoogleSignIn({
+          email: user.email,
+          name: user.name,
+          isAdmin: isAdminEmail(user.email),
+          providerAccountId: account.providerAccountId,
+          profile,
+        });
+      }
+
+      return true;
+    },
     async jwt({ token }) {
       token.isAdmin = isAdminEmail(token.email);
       return token;

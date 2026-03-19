@@ -95,6 +95,12 @@ Protected gallery token signing:
 
 - `GALLERY_ACCESS_TOKEN_SECRET` (or fallback to `NEXTAUTH_SECRET`)
 
+Request/security logging:
+
+- `NEXTAUTH_DEBUG=true` to keep verbose NextAuth debug output
+- `REQUEST_COUNTRY_ALLOWLIST=US` to flag traffic from unexpected countries
+- `REQUEST_ALERT_THRESHOLD=100` to flag high request volume from one IP in a 10-minute window
+
 Contact form:
 
 - `RESEND_API_KEY`
@@ -119,6 +125,24 @@ Contact form:
    - Public folders + API key: set `GOOGLE_DRIVE_API_KEY`
    - Private folders: use service account credentials and share folders with that service account
 3. Put folder IDs in env (`DRIVE_FOLDER_*`) or add galleries in admin UI.
+
+## Request Logging
+
+The app includes centralized request logging in `src/proxy.ts` for Railway logs.
+
+It logs:
+
+- client IP
+- method and path
+- browser/OS/device signature
+- edge-provided geo headers when available
+- request count per IP over a rolling 10-minute window
+- alerts for suspicious paths like `/wp-login.php`, `/.env`, `/phpmyadmin`, `/config`
+
+Notes:
+
+- Browsers do not expose a reliable hardware device ID to the server, so logs use a device signature based on user-agent data.
+- Exact coordinates are only logged if your edge provider sends latitude/longitude headers. Standard Railway requests usually do not provide precise GPS data.
 
 ## Adding Galleries
 

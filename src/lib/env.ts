@@ -9,6 +9,22 @@ const parseCsv = (raw: string | undefined): string[] => {
     .filter(Boolean);
 };
 
+const parseCountryCsv = (raw: string | undefined): string[] => {
+  if (!raw) {
+    return [];
+  }
+
+  return raw
+    .split(",")
+    .map((value) => value.trim().toUpperCase())
+    .filter(Boolean);
+};
+
+const parsePositiveInteger = (raw: string | undefined, fallback: number) => {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
@@ -30,6 +46,11 @@ export const env = {
     "Colsen Hostler Photography <onboarding@resend.dev>",
   contactToEmail: process.env.CONTACT_TO_EMAIL ?? "",
   adminEmails: parseCsv(process.env.ADMIN_EMAILS),
+  requestCountryAllowlist: parseCountryCsv(process.env.REQUEST_COUNTRY_ALLOWLIST),
+  requestAlertThreshold: parsePositiveInteger(
+    process.env.REQUEST_ALERT_THRESHOLD,
+    100,
+  ),
 };
 
 export const isProduction = env.nodeEnv === "production";
