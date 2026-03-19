@@ -32,7 +32,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${headingFont.variable} ${bodyFont.variable} h-full antialiased`}
+      className={`dark ${headingFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <Providers>
