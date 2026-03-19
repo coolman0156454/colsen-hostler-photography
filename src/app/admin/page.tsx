@@ -70,7 +70,61 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         gallery={editableGallery}
       />
 
-      <div className="overflow-hidden rounded-3xl border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="space-y-3 md:hidden">
+        {galleries.map((gallery) => (
+          <div
+            key={gallery.id}
+            className="rounded-3xl border border-zinc-300 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-lg font-semibold">{gallery.name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <span>{gallery.slug}</span>
+                  {gallery.managedByConfig ? (
+                    <span className="rounded-full border border-amber-500/40 px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-amber-500">
+                      Config
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <span className="rounded-full border border-zinc-300 px-2 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-300">
+                {visibilityLabel[gallery.visibility]}
+              </span>
+            </div>
+
+            <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  Category:
+                </span>{" "}
+                {gallery.category}
+              </p>
+              <p>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  Featured:
+                </span>{" "}
+                {gallery.isFeatured ? "Yes" : "No"}
+              </p>
+              <p className="break-all">
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  Folder:
+                </span>{" "}
+                {gallery.folderId}
+              </p>
+            </div>
+
+            <Link
+              href={`/admin?edit=${gallery.id}`}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              Edit Gallery
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-3xl border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-100/80 text-xs uppercase tracking-[0.15em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-300">
             <tr>

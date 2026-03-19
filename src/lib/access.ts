@@ -12,16 +12,12 @@ export const canViewGallery = (
   session: Session | null,
   galleryAccessToken: string | null,
 ) => {
-  if (isAdmin(session)) {
-    return true;
-  }
-
   if (gallery.visibility === GalleryVisibility.PUBLIC) {
     return true;
   }
 
   if (gallery.visibility === GalleryVisibility.GOOGLE_AUTH) {
-    return isAuthenticated(session);
+    return isAdmin(session) || isAuthenticated(session);
   }
 
   if (gallery.visibility === GalleryVisibility.PASSWORD) {

@@ -34,9 +34,8 @@ export default async function GalleryDetailPage({
   }
 
   const canBypassProtection =
-    Boolean(session?.user?.isAdmin) ||
-    (gallery.visibility === GalleryVisibility.GOOGLE_AUTH &&
-      Boolean(session?.user?.email));
+    gallery.visibility === GalleryVisibility.GOOGLE_AUTH &&
+    (Boolean(session?.user?.isAdmin) || Boolean(session?.user?.email));
 
   return (
     <GalleryDetailClient
