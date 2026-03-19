@@ -224,7 +224,7 @@ export function AdminGalleryForm({ gallery }: AdminGalleryFormProps) {
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-sm font-medium">
-            Cover Image File ID
+            Cover Image File ID or Drive URL
           </span>
           <input
             type="text"
@@ -232,6 +232,10 @@ export function AdminGalleryForm({ gallery }: AdminGalleryFormProps) {
             onChange={(event) => setCoverImageId(event.target.value)}
             className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 outline-none ring-cyan-500 transition focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           />
+          <span className="mt-2 block text-xs text-zinc-500 dark:text-zinc-400">
+            Paste a Google Drive image link or file ID. If you paste a folder link,
+            the first image in that folder will be used.
+          </span>
         </label>
         <label className="block">
           <span className="mb-2 block text-sm font-medium">Visibility</span>

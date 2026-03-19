@@ -7,6 +7,7 @@ const DRIVE_SCOPE = ["https://www.googleapis.com/auth/drive.readonly"];
 const CACHE_TTL_MS = 1000 * 60 * 5;
 const MAX_CACHE_ENTRIES = 75;
 const DRIVE_FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
+const DRIVE_ID_PATTERN = /^[A-Za-z0-9_-]{10,}$/;
 
 type CacheEntry = {
   expiresAt: number;
@@ -97,6 +98,36 @@ const isFolder = (mimeType: string | null | undefined) =>
 
 const imageOrFolderQuery = (parentId: string) =>
   `'${parentId}' in parents and trashed = false and (mimeType = '${DRIVE_FOLDER_MIME_TYPE}' or mimeType contains 'image/')`;
+
+export const normalizeDriveResourceId = (value: string | null | undefined) => {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (DRIVE_ID_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    const queryId = url.searchParams.get("id")?.trim();
+    if (queryId && DRIVE_ID_PATTERN.test(queryId)) {
+      return queryId;
+    }
+
+    const pathMatch = url.pathname.match(
+      /\/(?:file\/d|drive\/folders|document\/d|presentation\/d|spreadsheets\/d)\/([^/]+)/,
+    );
+    if (pathMatch?.[1] && DRIVE_ID_PATTERN.test(pathMatch[1])) {
+      return pathMatch[1];
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
 
 export const clearDriveCache = (folderId?: string) => {
   if (!folderId) {
@@ -276,4 +307,45 @@ export const listDriveFolderImages = async (
   trimCache();
 
   return files;
+};
+
+export const resolveDriveImage = async (value: string | null | undefined) => {
+  const resourceId = normalizeDriveResourceId(value);
+  if (!resourceId) {
+    return null;
+  }
+
+  const drive = getDriveClient();
+
+  try {
+    const response = await drive.files.get({
+      fileId: resourceId,
+      fields: "id, name, mimeType, createdTime, imageMediaMetadata(width,height)",
+      supportsAllDrives: true,
+    });
+
+    const file = response.data;
+    if (!file.id || !file.name) {
+      return null;
+    }
+
+    if (isFolder(file.mimeType)) {
+      const [firstImage] = await listDriveFolderImages(file.id);
+      return firstImage ?? null;
+    }
+
+    if (!file.mimeType?.includes("image/")) {
+      return null;
+    }
+
+    return toImage({
+      id: file.id,
+      name: file.name,
+      createdTime: file.createdTime,
+      imageMediaMetadata: file.imageMediaMetadata,
+    });
+  } catch (error) {
+    console.error(`Failed to resolve Drive image reference ${resourceId}`, error);
+    return null;
+  }
 };

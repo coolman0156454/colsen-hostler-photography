@@ -2,7 +2,7 @@ import {
   configuredGalleries,
   featuredDriveFolderId,
 } from "@/config/gallery-folders";
-import { listDriveFolderImages } from "@/lib/drive";
+import { listDriveFolderImages, normalizeDriveResourceId } from "@/lib/drive";
 import { readGalleries, writeGalleries } from "@/lib/gallery-repository";
 import { hashGalleryPassword } from "@/lib/security";
 import { slugify } from "@/lib/slugs";
@@ -154,6 +154,7 @@ export const createGallery = async (input: CreateGalleryInput) => {
   }
 
   const now = new Date().toISOString();
+  const normalizedCoverImageId = normalizeDriveResourceId(input.coverImageId) ?? null;
   const created: GalleryRecord = {
     id: crypto.randomUUID(),
     slug: normalizedSlug,
@@ -161,7 +162,7 @@ export const createGallery = async (input: CreateGalleryInput) => {
     category: input.category.trim(),
     description: input.description?.trim() || null,
     folderId: input.folderId.trim(),
-    coverImageId: input.coverImageId?.trim() || null,
+    coverImageId: normalizedCoverImageId,
     visibility,
     passwordHash: requiresPassword ? await hashGalleryPassword(password!) : null,
     isFeatured: Boolean(input.isFeatured),
@@ -226,6 +227,7 @@ export const updateGallery = async (input: UpdateGalleryInput) => {
   }
 
   const now = new Date().toISOString();
+  const normalizedCoverImageId = normalizeDriveResourceId(input.coverImageId) ?? null;
   const updated: GalleryRecord = {
     ...current,
     slug: normalizedSlug,
@@ -233,7 +235,7 @@ export const updateGallery = async (input: UpdateGalleryInput) => {
     category: input.category.trim(),
     description: input.description?.trim() || null,
     folderId: trimmedFolderId,
-    coverImageId: input.coverImageId?.trim() || null,
+    coverImageId: normalizedCoverImageId,
     visibility,
     passwordHash: requiresPassword
       ? password

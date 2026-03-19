@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { listDriveFolderImages } from "@/lib/drive";
+import { listDriveFolderImages, resolveDriveImage } from "@/lib/drive";
 import { getAllGalleries } from "@/lib/gallery-service";
 import { type GalleryVisibility } from "@/types/gallery";
 
@@ -13,19 +13,19 @@ const visibilityLabel: Record<GalleryVisibility, string> = {
   GOOGLE_AUTH: "Google Login",
 };
 
-const coverUrl = (coverImageId: string | null) =>
-  coverImageId ? `https://lh3.googleusercontent.com/d/${coverImageId}=w1200` : null;
-
 export default async function GalleriesPage() {
   const galleries = await getAllGalleries();
   const galleryCards = (
     await Promise.all(
       galleries.map(async (gallery) => {
         if (gallery.coverImageId) {
-          return {
-            gallery,
-            previewUrl: coverUrl(gallery.coverImageId),
-          };
+          const coverImage = await resolveDriveImage(gallery.coverImageId);
+          if (coverImage) {
+            return {
+              gallery,
+              previewUrl: coverImage.thumbnailUrl,
+            };
+          }
         }
 
         try {
