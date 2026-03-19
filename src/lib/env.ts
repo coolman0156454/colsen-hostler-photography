@@ -13,6 +13,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   nextAuthSecret: process.env.NEXTAUTH_SECRET ?? "",
+  nextAuthDebug: process.env.NEXTAUTH_DEBUG === "true",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   googleDriveApiKey: process.env.GOOGLE_DRIVE_API_KEY ?? "",

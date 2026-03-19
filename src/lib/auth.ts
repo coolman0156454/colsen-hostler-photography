@@ -7,6 +7,7 @@ const isAdminEmail = (email: string | null | undefined) =>
   Boolean(email && env.adminEmails.includes(email.toLowerCase()));
 
 export const authOptions: NextAuthOptions = {
+  debug: env.nextAuthDebug,
   providers: isGoogleAuthConfigured
     ? [
         GoogleProvider({
@@ -26,6 +27,19 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   secret: env.nextAuthSecret || undefined,
+  logger: {
+    error(code, metadata) {
+      console.error("[next-auth][error]", code, metadata ?? "");
+    },
+    warn(code) {
+      console.warn("[next-auth][warn]", code);
+    },
+    debug(code, metadata) {
+      if (env.nextAuthDebug) {
+        console.debug("[next-auth][debug]", code, metadata ?? "");
+      }
+    },
+  },
   session: {
     strategy: "jwt",
     maxAge: 60 * 60 * 24 * 7,
@@ -48,4 +62,3 @@ export const authOptions: NextAuthOptions = {
 };
 
 export const getAuthSession = () => getServerSession(authOptions);
-
