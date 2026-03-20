@@ -124,7 +124,7 @@ export function FeaturedGrid({ images }: FeaturedGridProps) {
   if (visibleImages.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-        Add a Drive folder ID to load featured photos on the homepage.
+        No gallery images are available for featured work yet.
       </div>
     );
   }
@@ -268,4 +268,3 @@ export function FeaturedGrid({ images }: FeaturedGridProps) {
     </>
   );
 }
-

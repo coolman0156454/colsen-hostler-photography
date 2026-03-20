@@ -8,6 +8,7 @@ import { hashGalleryPassword } from "@/lib/security";
 import { slugify } from "@/lib/slugs";
 import {
   GalleryVisibility,
+  type GalleryImage,
   type GalleryRecord,
   type GalleryVisibility as GalleryVisibilityType,
 } from "@/types/gallery";
@@ -37,6 +38,34 @@ const sortGalleries = (galleries: GalleryRecord[]) =>
     }
     return b.createdAt.localeCompare(a.createdAt);
   });
+
+const mergeGalleryImages = (imageGroups: GalleryImage[][]) => {
+  const imagesById = new Map<string, GalleryImage>();
+
+  for (const group of imageGroups) {
+    for (const image of group) {
+      imagesById.set(image.id, image);
+    }
+  }
+
+  return [...imagesById.values()].sort((a, b) => {
+    const aTime = a.createdTime ?? "";
+    const bTime = b.createdTime ?? "";
+    return bTime.localeCompare(aTime);
+  });
+};
+
+const loadImagesForGalleries = async (galleries: GalleryRecord[]) => {
+  if (galleries.length === 0) {
+    return [] as GalleryImage[];
+  }
+
+  const imageGroups = await Promise.all(
+    galleries.map((gallery) => listDriveFolderImages(gallery.folderId)),
+  );
+
+  return mergeGalleryImages(imageGroups);
+};
 
 export const syncConfiguredGalleries = async () => {
   if (hasSyncedConfiguredGalleries) {
@@ -121,13 +150,18 @@ export const getFeaturedImages = async () => {
   }
 
   const galleries = await readGalleries();
-  const featuredGallery = galleries.find((gallery) => gallery.isFeatured);
+  const featuredGalleries = sortGalleries(galleries).filter((gallery) => gallery.isFeatured);
+  const featuredImages = await loadImagesForGalleries(featuredGalleries);
 
-  if (!featuredGallery) {
-    return [];
+  if (featuredImages.length > 0) {
+    return featuredImages;
   }
 
-  return listDriveFolderImages(featuredGallery.folderId);
+  const publicGalleries = sortGalleries(galleries).filter(
+    (gallery) => gallery.visibility === GalleryVisibility.PUBLIC,
+  );
+
+  return loadImagesForGalleries(publicGalleries);
 };
 
 export const createGallery = async (input: CreateGalleryInput) => {
